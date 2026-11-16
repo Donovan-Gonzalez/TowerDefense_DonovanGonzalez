@@ -7,15 +7,16 @@ public class EnemyType
     public string name;
     public float speed;
     public int health;
-    public Color color;
+    public Color color;              // main body color of the model
     public float scale;
     public int reward;
     public EnemyKind kind;
     public float damageMultiplier;   // 1 = normal, 0.5 = takes half damage
+    public EnemyModel model;
 
-    public EnemyType(string n, float sp, int hp, Color c, float sc, int rw, EnemyKind k, float dmgMult)
+    public EnemyType(string n, float sp, int hp, Color c, float sc, int rw, EnemyKind k, float dmgMult, EnemyModel m)
     {
-        name = n; speed = sp; health = hp; color = c; scale = sc; reward = rw; kind = k; damageMultiplier = dmgMult;
+        name = n; speed = sp; health = hp; color = c; scale = sc; reward = rw; kind = k; damageMultiplier = dmgMult; model = m;
     }
 }
 
@@ -36,13 +37,14 @@ public class LevelConfig
 
 public static class LevelData
 {
-    //                                                           speed  hp   color                                scale  $    kind              dmg taken
-    static readonly EnemyType Normal = new EnemyType("Normal", 3f, 3, new Color(0.85f, 0.2f, 0.2f), 1f, 7, EnemyKind.Ground, 1f);
-    public static readonly EnemyType Runner = new EnemyType("Runner", 6f, 2, new Color(1f, 0.9f, 0.2f), 0.7f, 10, EnemyKind.Ground, 1f);
-    public static readonly EnemyType Tank = new EnemyType("Tank", 1.5f, 10, new Color(0.2f, 0.3f, 0.9f), 1.4f, 25, EnemyKind.Ground, 1f);
-    static readonly EnemyType Armored = new EnemyType("Armored", 2.5f, 7, new Color(0.6f, 0.3f, 0.8f), 1.15f, 15, EnemyKind.Ground, 0.5f);
-    static readonly EnemyType Flyer = new EnemyType("Flyer", 2.5f, 5, new Color(0.8f, 0.95f, 1f), 0.9f, 20, EnemyKind.Flyer, 1f);
-    public static readonly EnemyType Boss = new EnemyType("Boss", 1.2f, 50, new Color(0.15f, 0.05f, 0.2f), 2.4f, 200, EnemyKind.Boss, 0.8f);
+    //                                                        speed  hp   body color                          scale  $    kind              dmg   model
+    static readonly EnemyType Goblin = new EnemyType("Goblin", 3f, 3, new Color(0.35f, 0.68f, 0.25f), 1.0f, 7, EnemyKind.Ground, 1f, EnemyModel.Goblin);
+    public static readonly EnemyType Wolf = new EnemyType("Wolf", 6f, 2, new Color(0.50f, 0.46f, 0.44f), 0.9f, 10, EnemyKind.Ground, 1f, EnemyModel.Wolf);
+    public static readonly EnemyType Ogre = new EnemyType("Ogre", 1.5f, 10, new Color(0.55f, 0.50f, 0.28f), 1.15f, 25, EnemyKind.Ground, 1f, EnemyModel.Ogre);
+    static readonly EnemyType Skeleton = new EnemyType("Skeleton", 3.5f, 4, new Color(0.92f, 0.90f, 0.80f), 1.0f, 9, EnemyKind.Ground, 1f, EnemyModel.Skeleton);
+    static readonly EnemyType Golem = new EnemyType("Golem", 2.5f, 7, new Color(0.50f, 0.52f, 0.56f), 1.1f, 15, EnemyKind.Ground, 0.5f, EnemyModel.Golem);
+    static readonly EnemyType Ufo = new EnemyType("UFO", 2.5f, 5, new Color(0.72f, 0.76f, 0.82f), 1.0f, 20, EnemyKind.Flyer, 1f, EnemyModel.Ufo);
+    public static readonly EnemyType Boss = new EnemyType("Boss", 1.2f, 50, new Color(0.45f, 0.08f, 0.15f), 1.8f, 200, EnemyKind.Boss, 0.8f, EnemyModel.Demon);
 
     public static List<LevelConfig> Build()
     {
@@ -62,7 +64,7 @@ public static class LevelData
             groupGap = 3.2f,
             hpMultiplier = 1f,
             startCoins = 75,
-            types = new[] { Normal, Runner, Tank },
+            types = new[] { Goblin, Wolf, Ogre },
             weights = new[] { 5, 3, 2 },
             boss = false
         });
@@ -81,8 +83,8 @@ public static class LevelData
             groupGap = 2.6f,
             hpMultiplier = 1.5f,
             startCoins = 125,
-            types = new[] { Normal, Runner, Tank, Armored },
-            weights = new[] { 3, 3, 2, 3 },
+            types = new[] { Goblin, Wolf, Ogre, Golem, Skeleton },
+            weights = new[] { 3, 3, 2, 3, 2 },
             boss = false
         });
 
@@ -101,8 +103,8 @@ public static class LevelData
             groupGap = 2.2f,
             hpMultiplier = 2f,
             startCoins = 175,
-            types = new[] { Normal, Runner, Tank, Armored, Flyer },
-            weights = new[] { 2, 2, 3, 3, 3 },
+            types = new[] { Goblin, Wolf, Ogre, Golem, Skeleton, Ufo },
+            weights = new[] { 2, 2, 3, 3, 2, 3 },
             boss = true
         });
 
@@ -116,7 +118,7 @@ public class EnemySpawner : MonoBehaviour
     public Transform pathRoot;
 
     const float IntraGroupGap = 0.35f;   // spacing inside a clump
-    const float BossAddInterval = 0.6f;  // Runner flood while the boss is alive
+    const float BossAddInterval = 0.6f;  // Wolf flood while the boss is alive
 
     [System.NonSerialized] public List<LevelConfig> levels;
 
@@ -207,8 +209,8 @@ public class EnemySpawner : MonoBehaviour
         }
         else if (cfg.boss && bossEnemy != null)
         {
-            // boss still alive: keep sending fast Runners
-            SpawnOne(LevelData.Runner);
+            // boss still alive: keep sending fast Wolves
+            SpawnOne(LevelData.Wolf);
             timer = BossAddInterval;
         }
         else
@@ -225,13 +227,13 @@ public class EnemySpawner : MonoBehaviour
 
         if (phase == 1)
         {
-            SetAlert("THE BOSS IS ANGRY! Tanks incoming!");
-            StartCoroutine(Burst(LevelData.Tank, 3, 0.8f));
+            SetAlert("THE BOSS IS ANGRY! Ogres incoming!");
+            StartCoroutine(Burst(LevelData.Ogre, 3, 0.8f));
         }
         else
         {
-            SetAlert("BOSS ENRAGED! Runner swarm!");
-            StartCoroutine(Burst(LevelData.Runner, 8, 0.3f));
+            SetAlert("BOSS ENRAGED! Wolf swarm!");
+            StartCoroutine(Burst(LevelData.Wolf, 8, 0.3f));
         }
     }
 
@@ -279,7 +281,7 @@ public class EnemySpawner : MonoBehaviour
         }
         else
         {
-            // ground enemies stand on the ground: center height = scale
+            // ground enemies stand on the ground: capsule center height = scale
             pts = new Vector3[cfg.path.Length];
             for (int i = 0; i < pts.Length; i++)
                 pts[i] = new Vector3(cfg.path[i].x, t.scale, cfg.path[i].z);
@@ -288,7 +290,7 @@ public class EnemySpawner : MonoBehaviour
         int hp = Mathf.Max(1, Mathf.RoundToInt(t.health * cfg.hpMultiplier));
 
         Enemy e = Instantiate(enemyPrefab, pts[0], Quaternion.identity);
-        e.Configure(t.speed, hp, t.color, t.scale, t.reward, t.kind, t.damageMultiplier);
+        e.Configure(t.speed, hp, t.color, t.scale, t.reward, t.kind, t.damageMultiplier, t.model);
         e.Init(pts);
         return e;
     }
