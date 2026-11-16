@@ -126,8 +126,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tower
   towerName: Sniper
+  style: 1
+  cost: 100
   range: 20
   shotsPerSecond: 0.7
   projectileSpeed: 40
   damage: 3
+  splashRadius: 0
   projectilePrefab: {fileID: 1818212429538323360, guid: 868f2799888d9d6479e162c8f6f55493, type: 3}
