@@ -331,6 +331,19 @@ public class Enemy : MonoBehaviour
     // the UFO is modelled around the capsule's center (it hovers), so no G() here
     void BuildUfo(Color body)
     {
+        // use the Kenney (CC0) UFO model if it's in Assets/Resources/Kenney
+        GameObject kenney = Resources.Load<GameObject>("Kenney/enemy-ufo-a");
+        if (kenney != null)
+        {
+            hover = true;
+            bobAmount = 0.12f;
+            GameObject m = Instantiate(kenney, visual);
+            m.transform.localPosition = Vector3.zero;
+            m.transform.localScale = Vector3.one * 2f;   // tweak if it looks too big or small
+            topY = 1.4f;
+            return;
+        }
+
         Color glass = new Color(0.4f, 0.9f, 1f);
         Color metal = Dk(body, 0.45f);
 
